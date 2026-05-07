@@ -6,6 +6,7 @@ import com.marruky.garage.model.Veiculo;
 import com.marruky.garage.model.Carro;
 import com.marruky.garage.model.Moto;
 import com.marruky.garage.model.Caminhao;
+import com.marruky.garage.model.Reparacao;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -112,6 +113,101 @@ public class Main {
         System.out.println("\n--- Receita Total de Inspeções ---");
         System.out.println("Total: " + totalInspecoes + "€");
 
+
+        System.out.println("\n==== CICLO COMPLETO DE UMA REPARAÇÃO ====\n");
+
+        //1.PREPARAR OS INTERVENIENTES
+        Cliente clienteRep = new Cliente(10, "António Magalhães", "938958481", "antonio@gmail.com");
+        Carro carroRep = new Carro("BB-99-CC", "Renault", "Clio", 2010, 5);
+        Mecanico mecanicoRep = new Mecanico(10, "João Mendes", "Mecânica Geral", 20.0);
+
+        Peca pFiltro = new Peca(10, "FILT-AR-RC1", "Filtro de ar", 18.50, 15);
+        Peca pOleo = new Peca(11, "OLEO-5W30", "Óleo motor 5W30", 45.00, 30);
+        Peca pVelas = new Peca(12, "VELAS-NGK4", "Jogo velas NGK", 32.00, 12);
+
+        //2.CRIAR A REPARAÇÃO(ESTADO INICIAL : ABERTA)
+        Reparacao rep = new Reparacao(100, clienteRep, carroRep, mecanicoRep, 0);
+        System.out.println("Reparação criada (estado inicial): ");
+        System.out.println(" " + rep);
+        System.out.println(" Estado: " + rep.getEstado());
+        System.out.println(" Data abertura: " + rep.getDataAbertura());
+
+        //3.ADICIONAR PEÇAS NO ESTADO ABERTA - PERMITIDO
+        System.out.println("\n--- Adicionando Peças ---\n");
+        rep.adicionarPeca(pFiltro);
+        System.out.println("Peças totais: " + rep.getPecas().size());
+
+        //4.INICIAR TRABALHO
+        System.out.println("\n--- iniciarTrabalho() ---\n");
+        rep.iniciarTrabalho();
+        System.out.println("Novo estado: " + rep.getEstado());
+
+        //5.ADICIONAR UMA PEÇA em EM_CURSO - AINDA PERMITIDO
+        System.out.println("\n--- Adicionando peça (estado EM_CURSO) ---\n");
+        rep.adicionarPeca(pVelas);
+        System.out.println("  Peças totais: " + rep.getPecas().size());
+
+        //6.REGISTRAR HORAS DE TRABALHO (MECANICO TRABALHOU 3H)
+        rep.setHorasTrabalho(3.0);
+        System.out.println("\n  Horas de trabalho registadas: " + rep.getHorasTrabalho() + "h");
+
+        // 7. Calcular preço total ANTES de concluir (sempre permitido — leitura)
+        System.out.println("\n--- Cálculo de preço (em curso) ---");
+        System.out.println("  Mão-de-obra: " + (rep.getHorasTrabalho() * mecanicoRep.getPrecoHora()) + "€");
+        System.out.println("  Peças (com IVA): " + (rep.calcularPrecoTotal() - rep.getHorasTrabalho() * mecanicoRep.getPrecoHora()) + "€");
+        System.out.println("  TOTAL: " + rep.calcularPrecoTotal() + "€");
+
+        // 8. Concluir trabalho — transição EM_CURSO → CONCLUIDA + preenche dataConclusao
+        System.out.println("\n--- concluirTrabalho() ---");
+        rep.concluirTrabalho();
+        System.out.println("  Novo estado: " + rep.getEstado());
+        System.out.println("  Data conclusão: " + rep.getDataConclusao());
+
+        // 9. TENTAR adicionar peça depois de CONCLUIDA — deve REJEITAR
+        System.out.println("\n--- Tentativa inválida: adicionar peça em CONCLUIDA ---");
+        try {
+            rep.adicionarPeca(new Peca(13, "EXTRA", "Peça extra", 10, 5));
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        // 10. TENTAR pular estados — concluirTrabalho de novo
+        System.out.println("\n--- Tentativa inválida: concluirTrabalho() em CONCLUIDA ---");
+        try {
+            rep.concluirTrabalho();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        // 11. Faturar — transição CONCLUIDA → FATURADA
+        System.out.println("\n--- faturar() ---");
+        rep.faturar();
+        System.out.println("  Estado final: " + rep.getEstado());
+
+        // 12. TENTAR algo após FATURADA
+        System.out.println("\n--- Tentativa inválida: faturar() de novo em FATURADA ---");
+        try {
+            rep.faturar();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        // 13. RESUMO FINAL — fatura simulada
+        System.out.println("\n=== FATURA SIMULADA ===");
+        System.out.println("Reparação #" + rep.getId());
+        System.out.println("Cliente: " + rep.getCliente().getNome());
+        System.out.println("Veículo: " + rep.getVeiculo().descricaoBase());
+        System.out.println("Mecânico: " + rep.getMecanico().getNome() + " (" + mecanicoRep.getPrecoHora() + "€/h)");
+        System.out.println("Horas: " + rep.getHorasTrabalho() + "h");
+        System.out.println("Peças aplicadas: " + rep.getPecas().size());
+        for (Peca p : rep.getPecas()) {
+            System.out.println("  - " + p.getNome() + ": " + p.calcularPrecoComIVA() + "€ (com IVA)");
+        }
+        System.out.println("---------------------------------");
+        System.out.println("TOTAL A PAGAR: " + rep.calcularPrecoTotal() + "€");
+        System.out.println("Estado: " + rep.getEstado());
+        System.out.println("Aberta em: " + rep.getDataAbertura());
+        System.out.println("Concluída em: " + rep.getDataConclusao());
     }
 }
 
