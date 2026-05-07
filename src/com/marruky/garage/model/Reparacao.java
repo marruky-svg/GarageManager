@@ -1,12 +1,14 @@
 package com.marruky.garage.model;
 
 import com.marruky.garage.enums.EstadoReparacao;
+import com.marruky.garage.interfaces.Faturavel;
+import com.marruky.garage.interfaces.Pesquisavel;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.time.LocalDateTime;
 
-public class Reparacao {
+public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
     private int id;
     private Cliente cliente;
     private Veiculo veiculo;
@@ -177,5 +179,36 @@ public class Reparacao {
             throw new IllegalStateException("Só é possível faturar uma reparação se estado for CONCLUIDA. Estado atual: " + estado);
         }
         setEstado(EstadoReparacao.FATURADA);
+    }
+
+    //IMPLEMENTAÇÕES DE FATURAVEL
+    @Override
+    public double calcularTotal() {
+        return calcularPrecoTotal();
+    }
+
+    @Override
+    public boolean podeSerFaturado() {
+        return estado == EstadoReparacao.CONCLUIDA;
+    }
+
+    @Override
+    public String getNumeroFatura() {
+        return "FT " + dataAbertura.getYear() + "/" + String.format("%05d", id);
+    }
+
+    //IMPLEMENTAÇÕES DE PESQUISAVEL
+
+    @Override
+    public boolean correspondeA(String termo) {
+        if(termo == null || termo.isBlank()) {
+            return false;
+        }
+        String termoLower = termo.toLowerCase();
+
+        return cliente.getNome().toLowerCase().contains(termoLower)
+                || veiculo.getMatricula().toLowerCase().contains(termoLower)
+                || mecanico.getNome().toLowerCase().contains(termoLower)
+                || estado.toString().toLowerCase().contains(termoLower);
     }
 }
