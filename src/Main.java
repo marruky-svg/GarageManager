@@ -10,6 +10,8 @@ import com.marruky.garage.enums.EstadoReparacao;
 import com.marruky.garage.interfaces.Faturavel;
 import com.marruky.garage.repository.ClienteRepository;
 
+import java.util.Comparator;
+import java.util.function.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +26,7 @@ public class Main {
         testarCicloReparacao();
         testarPolimorfismoFaturavel();
         testarRepositorioClientes();
+        testarStreamsComLambdas();
     }
 
     // ==========================================================================
@@ -331,5 +334,52 @@ public class Main {
         System.out.println("\n--- Estado final do repositório ---");
         clienteRepo.listarTodos().forEach(c -> System.out.println("  - " + c.getNome()));
     }
+
+    // ==========================================================================
+    // 7. STREAMS, LAMBDAS E RELATORIOS
+    // ==========================================================================
+    public static void testarStreamsComLambdas() {
+        System.out.println("\n=== STREAMS, LAMBDAS E RELATORIOS ===");
+
+        //PREPARAR REPOSITORIO com VARIOS CLIENTES
+        ClienteRepository repo = new ClienteRepository();
+        repo.adicionar(new Cliente(1, "Maria Silva", "910000001", "maria@example.pt"));
+        repo.adicionar(new Cliente(2, "Carlos Pereira", "910000002", "carlos@example.pt"));
+        repo.adicionar(new Cliente(3, "Beatriz Costa", "910000003", "beatriz@gmail.com"));
+        repo.adicionar(new Cliente(4, "Antonio Magalhaes", "910000004", "antonio@example.pt"));
+        repo.adicionar(new Cliente(5, "Diana Ferreira", "910000005", "diana@outlook.com"));
+
+        //1. Pesquisar por termo
+        System.out.println("\n--- Pesquisar 'silva' ---");
+        repo.pesquisar("silva").forEach(cliente -> System.out.println(" -" + cliente.getNome()));
+
+        //2. Listar ordenado por nome
+        System.out.println("\n--- Listar ordenado por nome ---");
+        repo.listarOrdenadoPorNome().forEach(c -> System.out.println(" -" + c.getNome() + "(" + c.getEmail() + ")"));
+
+        //3. Contar com lambda inline
+        System.out.println("\n--- Listar ordenado por email final .pt ---");
+        long ptCount = repo.contarComFiltro(c -> c.getEmail().endsWith(".pt"));
+        System.out.println("Total com .pt: " + ptCount);
+
+        System.out.println("\n--- Contar clientes com nome começado em 'M' ---");
+        long mCount = repo.contarComFiltro(c -> c.getNome().startsWith("M"));
+        System.out.println("Totla com 'M': " + mCount);
+
+        //4. Stream direto no main - extair só os emails
+        System.out.println("\n--- Lista de emails (extraídos com map) ---");
+        repo.listarTodos()
+                .stream()
+                .map(Cliente::getEmail)
+                .sorted()
+                .forEach(email -> System.out.println("Resposta: " + email));
+        //5. Verificar se há clientes com nome muito curto(anyMatch)
+        System.out.println("\n--- Algum cliente com nome < 5 caracteres? ---");
+        boolean haCurto = repo.listarTodos().stream()
+                .anyMatch(c -> c.getNome().length() < 5);
+        System.out.println("Resposta: " + haCurto);
+
+    }
+
 }
 
