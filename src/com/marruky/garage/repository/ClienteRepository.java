@@ -74,6 +74,7 @@ public class ClienteRepository implements RepositorioGenerico<Cliente> {
 
     //Predicate<Cliente> -> interface funcional(funcao que recebe Cliente e devolve boolean)
     //O metodo aceita uma função como parâmetro - assinatura totalmente genérica
+    @Override
     public long contarComFiltro(Predicate<Cliente> filtro) {
         return clientes.values().stream()
                 .filter(filtro)
