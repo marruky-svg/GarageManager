@@ -1,11 +1,4 @@
-import com.marruky.garage.model.Cliente;
-import com.marruky.garage.model.Mecanico;
-import com.marruky.garage.model.Peca;
-import com.marruky.garage.model.Veiculo;
-import com.marruky.garage.model.Carro;
-import com.marruky.garage.model.Moto;
-import com.marruky.garage.model.Caminhao;
-import com.marruky.garage.model.Reparacao;
+import com.marruky.garage.model.*;
 import com.marruky.garage.enums.EstadoReparacao;
 import com.marruky.garage.interfaces.Faturavel;
 import com.marruky.garage.repository.ClienteRepository;
@@ -15,7 +8,7 @@ import java.util.function.Predicate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
+import com.marruky.garage.model.LinhaPeca;
 
 public class Main {
 
@@ -27,6 +20,7 @@ public class Main {
         testarPolimorfismoFaturavel();
         testarRepositorioClientes();
         testarStreamsComLambdas();
+
     }
 
     // ==========================================================================
@@ -159,16 +153,16 @@ public class Main {
         System.out.println(" Data abertura: " + rep.getDataAbertura());
 
         System.out.println("\n--- Adicionando Peças ---");
-        rep.adicionarPeca(pFiltro);
-        System.out.println("Peças totais: " + rep.getPecas().size());
+        rep.adicionarLinhaPeca(pFiltro, 3);
+        System.out.println("Peças totais: " + rep.getLinhasPeca().size());
 
         System.out.println("\n--- iniciarTrabalho() ---");
         rep.iniciarTrabalho();
         System.out.println("Novo estado: " + rep.getEstado());
 
         System.out.println("\n--- Adicionando peça (estado EM_CURSO) ---");
-        rep.adicionarPeca(pVelas);
-        System.out.println("Peças totais: " + rep.getPecas().size());
+        rep.adicionarLinhaPeca(pVelas,1);
+        System.out.println("Peças totais: " + rep.getLinhasPeca().size());
 
         rep.setHorasTrabalho(3.0);
         System.out.println("\nHoras de trabalho registadas: " + rep.getHorasTrabalho() + "h");
@@ -185,7 +179,7 @@ public class Main {
 
         System.out.println("\n--- Tentativa inválida: adicionar peça em CONCLUIDA ---");
         try {
-            rep.adicionarPeca(new Peca(13, "EXTRA", "Peça extra", 10, 5));
+            rep.adicionarLinhaPeca(new Peca(13, "EXTRA", "Peça extra", 10, 5), 1);
         } catch (IllegalStateException e) {
             System.out.println("Erro apanhado (esperado): " + e.getMessage());
         }
@@ -214,9 +208,9 @@ public class Main {
         System.out.println("Veículo: " + rep.getVeiculo().descricaoBase());
         System.out.println("Mecânico: " + rep.getMecanico().getNome() + " (" + mecanicoRep.getPrecoHora() + "€/h)");
         System.out.println("Horas: " + rep.getHorasTrabalho() + "h");
-        System.out.println("Peças aplicadas: " + rep.getPecas().size());
-        for (Peca p : rep.getPecas()) {
-            System.out.println("  - " + p.getNome() + ": " + p.calcularPrecoComIVA() + "€ (com IVA)");
+        System.out.println("Peças aplicadas: " + rep.getLinhasPeca().size());
+        for (LinhaPeca linha : rep.getLinhasPeca()) {
+            System.out.println("  - " + linha.getPeca().getNome() + " x " + linha.getQuantidade() + ": " + linha.calcularSubtotalComIVA() + "€ (com IVA)");
         }
         System.out.println("---------------------------------");
         System.out.println("TOTAL A PAGAR: " + rep.calcularPrecoTotal() + "€");
@@ -236,7 +230,7 @@ public class Main {
         Carro car = new Carro("XX-99-XX", "Teste", "Modelo", 2020, 5);
         Mecanico mec = new Mecanico(20, "Mecanico Teste", "Geral", 15.0);
         Reparacao repFat = new Reparacao(200, cli, car, mec, 2.0);
-        repFat.adicionarPeca(new Peca(20, "REF-001", "Peça teste", 50.0, 10));
+        repFat.adicionarLinhaPeca(new Peca(20, "REF-001", "Peça teste", 50.0, 10), 1);
         repFat.iniciarTrabalho();
         repFat.concluirTrabalho();
 

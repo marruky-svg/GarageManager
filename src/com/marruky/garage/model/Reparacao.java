@@ -4,6 +4,7 @@ import com.marruky.garage.enums.EstadoReparacao;
 import com.marruky.garage.interfaces.Faturavel;
 import com.marruky.garage.interfaces.Pesquisavel;
 
+
 import java.util.List;
 import java.util.ArrayList;
 import java.time.LocalDateTime;
@@ -13,7 +14,7 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
     private Cliente cliente;
     private Veiculo veiculo;
     private Mecanico mecanico;
-    private List<Peca> pecas;
+    private List<LinhaPeca> linhasPeca;
     private double horasTrabalho;
     private EstadoReparacao estado;
     private LocalDateTime dataAbertura;
@@ -25,7 +26,7 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
         setVeiculo(veiculo);
         setMecanico(mecanico);
         setHorasTrabalho(horasTrabalho);
-        this.pecas = new ArrayList<>();
+        this.linhasPeca = new ArrayList<>();
         this.estado = EstadoReparacao.ABERTA;
         this.dataAbertura = LocalDateTime.now();
         this.dataConclusao = null;
@@ -49,8 +50,8 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
         return mecanico;
     }
 
-    public List<Peca> getPecas() {
-        return List.copyOf(pecas);
+    public List<LinhaPeca> getLinhasPeca() {
+        return List.copyOf(linhasPeca);
     }
 
     public double getHorasTrabalho() {
@@ -109,36 +110,33 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
 
 
     //OPERACAO COM PECAS
-    public void adicionarPeca(Peca peca) {
-        if (peca == null) {
-            throw new IllegalArgumentException("Peça não pode estar em branco");
+    public void adicionarLinhaPeca(Peca peca, int quantidade) {
+        if (estado != EstadoReparacao.ABERTA && estado != EstadoReparacao.EM_CURSO) {
+            throw new IllegalStateException("Não é possível adicionar peças a uma reparação no estado " + estado);
         }
-        if (estado != EstadoReparacao.EM_CURSO && estado != EstadoReparacao.ABERTA) {
-            throw new IllegalStateException(
-                    "Não é possível adicionar peças a uma reparação no estado " + estado
-            );
-        }
-        this.pecas.add(peca);
+        LinhaPeca linha = new LinhaPeca(peca, quantidade);
+        linhasPeca.add(linha);
     }
 
-    public boolean removerPeca(Peca peca) {
-        if (peca == null) {
-            throw new IllegalArgumentException("Peça não pode estar em branco");
+    public boolean removerLinhaPeca(int indice) {
+        if (estado != EstadoReparacao.ABERTA && estado != EstadoReparacao.EM_CURSO) {
+            throw new IllegalStateException("Não é possível remover peças de uma reparação no estado " + estado);
         }
-        if (estado != EstadoReparacao.EM_CURSO && estado != EstadoReparacao.ABERTA) {
-            throw new IllegalStateException(
-                    "Não é possível remover peças de uma reparação no estado " + estado
-            );
+
+        if (indice < 0 || indice >= linhasPeca.size()) {
+            return false;
         }
-        return this.pecas.remove(peca);
+
+        linhasPeca.remove(indice);
+        return true;
     }
 
     public double calcularPrecoTotal() {
         double custoMaoDeObra = horasTrabalho * mecanico.getPrecoHora();
 
         double custoPecas = 0.0;
-        for (Peca peca : pecas) {
-            custoPecas += peca.calcularPrecoComIVA();
+        for (LinhaPeca linha : linhasPeca) {
+            custoPecas += linha.calcularSubtotalComIVA();
         }
         return custoMaoDeObra + custoPecas;
     }
@@ -150,7 +148,7 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
                 ", cliente=" + cliente.getNome() +
                 ", veiculo=" + veiculo.getMatricula() +
                 ", mecanico=" + mecanico.getNome() +
-                ", pecas=" + pecas.size() +
+                ", linhasPeca=" + linhasPeca.size() +
                 ", horasTrabalho=" + horasTrabalho +
                 ", estado=" + estado +
                 ", dataAbertura=" + dataAbertura +
@@ -163,7 +161,7 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
         if (estado != EstadoReparacao.ABERTA) {
             throw new IllegalStateException("Só é possível iniciar trabalho em reparações ABERTAS. Estado atual: " + estado);
         }
-       setEstado(EstadoReparacao.EM_CURSO);
+        setEstado(EstadoReparacao.EM_CURSO);
     }
 
     public void concluirTrabalho() {
@@ -201,7 +199,7 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
 
     @Override
     public boolean correspondeA(String termo) {
-        if(termo == null || termo.isBlank()) {
+        if (termo == null || termo.isBlank()) {
             return false;
         }
         String termoLower = termo.toLowerCase();
