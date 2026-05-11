@@ -34,3 +34,6 @@ bin/
 ### Java ###
 *.class
 *.log
+
+# Maven
+target/
