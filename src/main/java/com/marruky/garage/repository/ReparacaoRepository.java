@@ -27,12 +27,6 @@ public class ReparacaoRepository implements RepositorioGenerico<Reparacao> {
     }
 
     @Override
-    public boolean remover(int id) {
-        Reparacao reparacao = reparacoes.remove(id);
-        return reparacao != null;
-    }
-
-    @Override
     public Optional<Reparacao> encontrarPorId(int id) {
         Reparacao reparacao = reparacoes.get(id);
         return Optional.ofNullable(reparacao);

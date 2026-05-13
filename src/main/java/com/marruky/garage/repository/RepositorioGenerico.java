@@ -6,7 +6,6 @@ import java.util.function.Predicate;
 
 public interface RepositorioGenerico<T> {
     void adicionar(T entidade);
-    boolean remover(int id);
     Optional<T> encontrarPorId(int id);
     List<T> listarTodos();
     int contar();

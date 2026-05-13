@@ -1,5 +1,6 @@
 package com.marruky.garage.model;
 
+import com.marruky.garage.enums.EstadoMecanico;
 import com.marruky.garage.enums.EstadoReparacao;
 import com.marruky.garage.interfaces.Faturavel;
 import com.marruky.garage.interfaces.Pesquisavel;
@@ -94,6 +95,9 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
         if (mecanico == null) {
             throw new IllegalArgumentException("Mecânico não pode estar em branco");
         }
+        if(mecanico.getEstado() != EstadoMecanico.ATIVO) {
+            throw new IllegalStateException("Não é possível atribuir reparação a mecânico não-ATIVO. Estado atual: " + mecanico.getEstado());
+        }
         this.mecanico = mecanico;
     }
 
@@ -179,6 +183,22 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
         setEstado(EstadoReparacao.FATURADA);
     }
 
+    public void cancelar() {
+        if (estado != EstadoReparacao.ABERTA
+                && estado != EstadoReparacao.EM_CURSO
+                && estado != EstadoReparacao.CONCLUIDA) {
+            throw new IllegalStateException("Só é possível cancelar reparações ABERTAS, EM_CURSO ou CONCLUIDAS. Estado atual: " + estado);
+        }
+        setEstado(EstadoReparacao.CANCELADA);
+    }
+
+    public void anular() {
+        if (estado != EstadoReparacao.FATURADA) {
+            throw new IllegalStateException("Só é possível anular reparações FATURADAS. Estado atual: " + estado);
+        }
+        setEstado(EstadoReparacao.ANULADA);
+    }
+
     //IMPLEMENTAÇÕES DE FATURAVEL
     @Override
     public double calcularTotal() {
@@ -209,4 +229,5 @@ public class Reparacao implements Faturavel, Pesquisavel<Reparacao> {
                 || mecanico.getNome().toLowerCase().contains(termoLower)
                 || estado.toString().toLowerCase().contains(termoLower);
     }
+
 }

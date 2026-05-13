@@ -6,6 +6,7 @@ public class Peca {
     private String nome;
     private double precoUnitario;
     private int stock;
+    private boolean disponivel;
     public static final double IVA = 0.23;
 
     public Peca(int id, String referencia, String nome, double precoUnitario, int stock){
@@ -14,6 +15,7 @@ public class Peca {
         setNome(nome);
         setPrecoUnitario(precoUnitario);
         setStock(stock);
+        this.disponivel = true;
     }
 
     //GETTERS
@@ -37,6 +39,9 @@ public class Peca {
         return stock;
     }
 
+    public boolean isDisponivel() {
+        return disponivel;
+    }
     //SETTERS
 
     public void setId(int id){
@@ -77,7 +82,26 @@ public class Peca {
 
     @Override
     public String toString() {
-        return "Peca{id=" + id + ", referencia='" + referencia + "', nome='" + nome + "', precoUnitario=" + precoUnitario + ", stock=" + stock + "}";
+        return "Peca{id=" + id +
+                ", referencia='" + referencia + '\'' +
+                ", nome='" + nome + '\'' +
+                ", precoUnitario=" + precoUnitario +
+                ", stock=" + stock +
+                ", disponivel=" + disponivel + "}";
+    }
+
+    public void descontinuar() {
+        if (!disponivel) {
+            throw new IllegalStateException("Peça já está descontinuada");
+        }
+        this.disponivel = false;
+    }
+
+    public void disponibilizar() {
+        if (disponivel) {
+            throw new IllegalStateException("Peça já está disponível");
+        }
+        this.disponivel = true;
     }
 }
 

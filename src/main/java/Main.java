@@ -20,7 +20,6 @@ public class Main {
         testarPolimorfismoFaturavel();
         testarRepositorioClientes();
         testarStreamsComLambdas();
-
     }
 
     // ==========================================================================
@@ -216,6 +215,170 @@ public class Main {
         System.out.println("TOTAL A PAGAR: " + rep.calcularPrecoTotal() + "€");
         System.out.println("Estado: " + rep.getEstado());
 
+        // ==================================================================
+        // TESTE EXTRA — Ciclo CANCELAR (reparação separada)
+        // ==================================================================
+
+        System.out.println("\n=== TESTE EXTRA: ciclo CANCELAR ===");
+
+        Reparacao rep2 = new Reparacao(101, clienteRep, carroRep, mecanicoRep, 0);
+        System.out.println("  Estado inicial: " + rep2.getEstado());
+
+        rep2.iniciarTrabalho();
+        System.out.println("  Após iniciarTrabalho(): " + rep2.getEstado());
+
+        rep2.cancelar();
+        System.out.println("  Após cancelar(): " + rep2.getEstado());
+
+        System.out.println("\n--- Tentativa inválida: faturar() em CANCELADA ---");
+        try {
+            rep2.faturar();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        // ==================================================================
+        // TESTE EXTRA — Ciclo ANULAR (reparação separada, levada até FATURADA)
+        // ==================================================================
+        System.out.println("\n=== TESTE EXTRA: ciclo ANULAR ===");
+
+        Reparacao rep3 = new Reparacao(102, clienteRep, carroRep, mecanicoRep, 1.0);
+        rep3.iniciarTrabalho();
+        rep3.concluirTrabalho();
+        rep3.faturar();
+        System.out.println("  Estado após faturar(): " + rep3.getEstado());
+
+        System.out.println("\n--- Tentativa inválida: cancelar() em FATURADA ---");
+        try {
+            rep3.cancelar();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        rep3.anular();
+        System.out.println("  Após anular(): " + rep3.getEstado());
+
+        System.out.println("\n--- Tentativa inválida: anular() em ANULADA ---");
+        try {
+            rep3.anular();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        // ==================================================================
+        // TESTE EXTRA — FSM do Mecânico (estados + bloqueio cross-domain)
+        // ==================================================================
+        System.out.println("\n=== TESTE EXTRA: FSM do Mecânico ===");
+
+        Mecanico ana = new Mecanico(50, "Ana Ferreira", "Eletricidade", 18.0);
+        System.out.println("  Estado inicial: " + ana.getEstado());
+
+        ana.darBaixa();
+        System.out.println("  Após darBaixa(): " + ana.getEstado());
+
+        ana.voltarAoServico();
+        System.out.println("  Após voltarAoServico(): " + ana.getEstado());
+
+        ana.despedir();
+        System.out.println("  Após despedir(): " + ana.getEstado());
+
+        // Tentar transições inválidas
+        System.out.println("\n--- Tentativa inválida: darBaixa() em DESPEDIDO ---");
+        try {
+            ana.darBaixa();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        System.out.println("\n--- Tentativa inválida: reformar() em DESPEDIDO ---");
+        try {
+            ana.reformar();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        // CROSS-DOMAIN: criar reparação com mecânico despedido
+        System.out.println("\n--- Tentativa inválida: criar Reparacao com mecânico DESPEDIDO ---");
+        try {
+            Reparacao repInvalida = new Reparacao(999, clienteRep, carroRep, ana, 1.0);
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        // ==================================================================
+        // TESTE EXTRA — Cliente boolean ativo
+        // ==================================================================
+        System.out.println("\n=== TESTE EXTRA: Cliente ativo/inativo ===");
+
+        Cliente clienteTeste = new Cliente(60, "Teste Cliente", "910000099", "teste@cliente.pt");
+        System.out.println("  Estado inicial: " + clienteTeste);
+        System.out.println("  isAtivo()? " + clienteTeste.isAtivo());
+
+        clienteTeste.desativar();
+        System.out.println("\n  Após desativar(): " + clienteTeste);
+        System.out.println("  isAtivo()? " + clienteTeste.isAtivo());
+
+        clienteTeste.reativar();
+        System.out.println("\n  Após reativar(): " + clienteTeste);
+
+        // Tentativas inválidas
+        System.out.println("\n--- Tentativa inválida: reativar() cliente já ATIVO ---");
+        try {
+            clienteTeste.reativar();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        clienteTeste.desativar();
+        System.out.println("\n--- Tentativa inválida: desativar() cliente já INATIVO ---");
+        try {
+            clienteTeste.desativar();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        // Importante: cliente INATIVO pode ainda ter reparação (decidimos: sem cross-domain)
+        System.out.println("\n--- Reparação com cliente INATIVO (permitida por design) ---");
+        Reparacao repClienteInativo = new Reparacao(998, clienteTeste, carroRep, mecanicoRep, 0.5);
+        System.out.println("  Reparação criada com sucesso: id=" + repClienteInativo.getId());
+        System.out.println("  Cliente ativo? " + repClienteInativo.getCliente().isAtivo());
+
+        // ==================================================================
+        // TESTE EXTRA — Peça disponível/descontinuada
+        // ==================================================================
+
+        System.out.println("\n=== TESTE EXTRA: Peça disponível/descontinuada ===");
+
+        Peca pecaTeste = new Peca(70, "TEST-001", "Peça de teste", 10.0, 5);
+        System.out.println("Estado inicial: " + pecaTeste);
+        System.out.println("isDisponivel()? " + pecaTeste.isDisponivel());
+
+        pecaTeste.descontinuar();
+        System.out.println("\n  Após descontinuar(): " + pecaTeste);
+        System.out.println("  isDisponivel()? " + pecaTeste.isDisponivel());
+
+        pecaTeste.disponibilizar();
+        System.out.println("\n  Após disponibilizar(): " + pecaTeste);
+
+        // Tentativas inválidas
+        System.out.println("\n--- Tentativa inválida: disponibilizar() peça DISPONÍVEL ---");
+        try {
+            pecaTeste.disponibilizar();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        pecaTeste.descontinuar();
+        System.out.println("\n--- Tentativa inválida: descontinuar() peça DESCONTINUADA ---");
+        try {
+            pecaTeste.descontinuar();
+        } catch (IllegalStateException e) {
+            System.out.println("  Erro apanhado (esperado): " + e.getMessage());
+        }
+
+        // Importante: pode-se ainda adicionar peça descontinuada a reparação ABERTA?
+        // SIM — só estamos a marcar para não aparecer em novas compras de catálogo
+        // (decisão de design: sem cross-domain bloqueio aqui)
         return rep;  // ← DEVOLVE para o método seguinte usar
     }
 
@@ -316,14 +479,6 @@ public class Main {
         for (Cliente c : todos) {
             System.out.println("  - " + c);
         }
-
-        System.out.println("\n--- Remover id 102 ---");
-        boolean removeu1 = clienteRepo.remover(102);
-        System.out.println("Removeu? " + removeu1 + " | Total agora: " + clienteRepo.contar());
-
-        System.out.println("\n--- Remover id 999 (não existe) ---");
-        boolean removeu2 = clienteRepo.remover(999);
-        System.out.println("Removeu? " + removeu2 + " | Total agora: " + clienteRepo.contar());
 
         System.out.println("\n--- Estado final do repositório ---");
         clienteRepo.listarTodos().forEach(c -> System.out.println("  - " + c.getNome()));

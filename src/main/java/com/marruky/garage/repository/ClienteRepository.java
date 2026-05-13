@@ -34,12 +34,6 @@ public class ClienteRepository implements RepositorioGenerico<Cliente> {
     }
 
     @Override
-    public boolean remover(int id) {
-        Cliente removido = clientes.remove(id);
-        return removido != null;
-    }
-
-    @Override
     public Optional<Cliente> encontrarPorId(int id) {
         Cliente cliente = clientes.get(id);
         return Optional.ofNullable(cliente);

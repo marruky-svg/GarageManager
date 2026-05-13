@@ -32,12 +32,6 @@ public class MecanicoRepository implements RepositorioGenerico<Mecanico> {
     }
 
     @Override
-    public boolean remover(int id) {
-         Mecanico mRemovido = mecanicos.remove(id);
-         return mRemovido != null;
-    }
-
-    @Override
     public Optional<Mecanico> encontrarPorId(int id) {
        Mecanico mecanico = mecanicos.get(id);
        return Optional.ofNullable(mecanico);

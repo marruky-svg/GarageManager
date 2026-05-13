@@ -4,5 +4,7 @@ public enum EstadoReparacao {
     ABERTA,
     EM_CURSO,
     CONCLUIDA,
-    FATURADA
+    FATURADA,
+    CANCELADA,
+    ANULADA
 }

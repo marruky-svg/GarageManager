@@ -27,12 +27,6 @@ public class PecaRepository implements RepositorioGenerico<Peca>{
     }
 
     @Override
-    public boolean remover(int id) {
-        Peca peca = pecas.remove(id);
-        return peca != null;
-    }
-
-    @Override
     public Optional<Peca> encontrarPorId(int id) {
         Peca peca = pecas.get(id);
         return Optional.ofNullable(peca);
